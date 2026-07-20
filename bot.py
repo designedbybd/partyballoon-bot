@@ -18,7 +18,7 @@ from telegram.ext import (
     ContextTypes,
 )
 from logo_processor import add_logo_to_image, generate_white_logo_from_black
-from config import BOT_TOKEN
+from config import BOT_TOKEN, CHANNEL_ID
 
 # ─── إعداد اللوج ───────────────────────────────────────────────
 logging.basicConfig(
@@ -136,7 +136,7 @@ async def select_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # إضافة اللوجو
         result_bytes = add_logo_to_image(photo_bytes, color, position)
         
-        # إرسال الصورة الجاهزة
+        # إرسال الصورة الجاهزة للمستخدم
         await query.message.reply_photo(
             photo=result_bytes,
             caption=(
@@ -148,6 +148,17 @@ async def select_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
         
+        # إرسال نسخة للقناة
+        if CHANNEL_ID:
+            user_name = update.effective_user.first_name if update.effective_user else "مستخدم مجهول"
+            await context.bot.send_photo(
+                chat_id=CHANNEL_ID,
+                photo=result_bytes,
+                caption=f"👤 من: {user_name}\n"
+                        f"• اللون: {color_label}\n"
+                        f"• الموضع: {position_labels.get(position, position)}"
+            )
+            
     except Exception as e:
         logger.error(f"خطأ في المعالجة: {e}")
         await query.message.reply_text(
