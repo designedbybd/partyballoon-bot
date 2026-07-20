@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  logo-bot:
+    build: .
+    container_name: party-balloon-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # حفظ اللوجو خارج الكونتينر (سهل التعديل)
+      - ./logo_black.png:/app/logo_black.png:ro
+      - ./logo_white.png:/app/logo_white.png:ro

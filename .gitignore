@@ -1,0 +1,17 @@
+# لا ترفع ملف التوكن السري أبداً!
+.env
+
+# ملفات Python
+__pycache__/
+*.pyc
+*.pyo
+
+# ملفات مؤقتة
+debug_*.jpg
+sample_output.jpg
+logo_source.png
+logo_source.png.PNG
+logo_black.PNG
+logo_white.PNG
+create_test_logos.py
+test_bot.py
