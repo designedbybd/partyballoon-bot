@@ -7,8 +7,8 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 
 # مسارات اللوجو
-LOGO_BLACK_PATH = "logo_black.png"
-LOGO_WHITE_PATH = "logo_white.png"
+LOGO_BLACK_PATH = "logo_black.PNG"
+LOGO_WHITE_PATH = "logo_white.PNG"
 
 # حجم اللوجو (نسبة من عرض الصورة)
 LOGO_SIZE_RATIO = 0.20  # 20% من عرض الصورة
