@@ -45,7 +45,7 @@ def _probe_video_size(video_path: str) -> tuple:
     return width, height
 
 
-def add_logo_to_video(video_bytes: bytes, color: str, position: str) -> bytes:
+def add_logo_to_video(video_bytes: bytes, color: str, position: str, size_ratio: float = None) -> bytes:
     """
     إضافة اللوجو على فيديو باستخدام ffmpeg
 
@@ -54,6 +54,7 @@ def add_logo_to_video(video_bytes: bytes, color: str, position: str) -> bytes:
         color: "black" أو "white"
         position: "top_right" / "top_left" / "bottom_right" / "bottom_left"
                   / "top_center" / "bottom_center"
+        size_ratio: نسبة حجم اللوجو من عرض الفيديو (اختياري)
 
     Returns:
         بيانات الفيديو بعد إضافة اللوجو (MP4)
@@ -76,7 +77,7 @@ def add_logo_to_video(video_bytes: bytes, color: str, position: str) -> bytes:
 
         # تحضير اللوجو بنفس نسبة الحجم المستخدمة مع الصور
         source_logo_path = LOGO_BLACK_PATH if color == "black" else LOGO_WHITE_PATH
-        logo_img = prepare_logo(source_logo_path, video_w)
+        logo_img = prepare_logo(source_logo_path, video_w, size_ratio)
         logo_img.save(logo_path, format="PNG")
         logo_w, logo_h = logo_img.size
 
@@ -103,4 +104,3 @@ def add_logo_to_video(video_bytes: bytes, color: str, position: str) -> bytes:
 
         with open(output_path, "rb") as f:
             return f.read()
-
