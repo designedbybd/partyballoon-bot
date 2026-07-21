@@ -94,8 +94,14 @@ async def select_color(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("↗ يمين فوق",  callback_data="pos_top_right"),
         ],
         [
+            InlineKeyboardButton("⬆ نص فوق",   callback_data="pos_top_center"),
+        ],
+        [
             InlineKeyboardButton("↙ شمال تحت",  callback_data="pos_bottom_left"),
             InlineKeyboardButton("↘ يمين تحت",  callback_data="pos_bottom_right"),
+        ],
+        [
+            InlineKeyboardButton("⬇ نص تحت",   callback_data="pos_bottom_center"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -119,10 +125,12 @@ async def select_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
     photo_bytes = context.user_data.get(KEY_PHOTO)
     
     position_labels = {
-        "top_right":    "↗ يمين فوق",
-        "top_left":     "↖ شمال فوق",
-        "bottom_right": "↘ يمين تحت",
-        "bottom_left":  "↙ شمال تحت",
+        "top_right":     "↗ يمين فوق",
+        "top_left":      "↖ شمال فوق",
+        "bottom_right":  "↘ يمين تحت",
+        "bottom_left":   "↙ شمال تحت",
+        "top_center":    "⬆ نص فوق",
+        "bottom_center": "⬇ نص تحت",
     }
     color_label = "⚫ أسود" if color == "black" else "⚪ أبيض"
     
