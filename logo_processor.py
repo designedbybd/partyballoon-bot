@@ -30,6 +30,8 @@ def get_logo_position(position: str, img_w: int, img_h: int, logo_w: int, logo_h
         "top_left":      (margin, margin),
         "bottom_right":  (img_w - logo_w - margin, img_h - logo_h - margin),
         "bottom_left":   (margin, img_h - logo_h - margin),
+        "top_center":    ((img_w - logo_w) // 2, margin),
+        "bottom_center": ((img_w - logo_w) // 2, img_h - logo_h - margin),
     }
     return positions.get(position, positions["bottom_right"])
 
@@ -96,3 +98,4 @@ def generate_white_logo_from_black():
             print("✅ تم إنشاء logo_white.png تلقائيًا")
         else:
             print("⚠️ لم يتم العثور على logo_black.png")
+
