@@ -25,7 +25,7 @@ from telegram.ext import (
 )
 from logo_processor import add_logo_to_image, generate_white_logo_from_black
 from video_processor import add_logo_to_video, VideoProcessingError
-from config import BOT_TOKEN, CHANNEL_ID
+from config import BOT_TOKEN, CHANNEL_ID, LOGO_SIZE_OPTIONS
 
 # ─── إعداد اللوج ───────────────────────────────────────────────
 logging.basicConfig(
@@ -37,9 +37,17 @@ logger = logging.getLogger(__name__)
 # ─── مفاتيح تخزين البيانات المؤقتة ──────────────────────────────
 KEY_ITEMS = "batch_items"          # [{"type": "photo"/"video", "bytes": b}, ...]
 KEY_COLOR = "selected_color"
+KEY_SIZE = "selected_size"
 KEY_PROMPT_MSG_ID = "prompt_message_id"
 
 MAX_BATCH_SIZE = 20  # حد أقصى تحوطي لعدد العناصر في الدفعة الواحدة
+
+SIZE_LABELS = {
+    "small":  "🔹 صغير",
+    "medium": "🔸 متوسط",
+    "large":  "🔶 كبير",
+    "xlarge": "🟠 أكبر",
+}
 
 POSITION_LABELS = {
     "top_right":     "↗ يمين فوق",
@@ -58,7 +66,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🎈 *أهلاً بك في Party Balloon Bot!*\n\n"
         "ابعت صورة أو فيديو (أو أكتر من واحد مع بعض) وأنا هضيف اللوجو عليهم ✨\n\n"
-        "ابعت العناصر اللي عايزها، وبعدين اختر اللون والموضع، وأنا هعالجهم كلهم وأبعتهم لك وللقناة 👇",
+        "ابعت العناصر اللي عايزها، وبعدين اختر اللون والمقاس والموضع، وأنا هعالجهم كلهم وأبعتهم لك وللقناة 👇",
         parse_mode="Markdown"
     )
 
@@ -141,7 +149,7 @@ async def receive_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ════════════════════════════════════════════════════════════════
-# اختيار اللون → طلب اختيار الموضع
+# اختيار اللون → طلب اختيار المقاس
 # ════════════════════════════════════════════════════════════════
 async def select_color(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -156,6 +164,44 @@ async def select_color(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.pop(KEY_PROMPT_MSG_ID, None)
 
     color_label = "⚫ أسود" if color == "black" else "⚪ أبيض"
+
+    keyboard = [
+        [
+            InlineKeyboardButton(SIZE_LABELS["small"],  callback_data="size_small"),
+            InlineKeyboardButton(SIZE_LABELS["medium"], callback_data="size_medium"),
+        ],
+        [
+            InlineKeyboardButton(SIZE_LABELS["large"],  callback_data="size_large"),
+            InlineKeyboardButton(SIZE_LABELS["xlarge"], callback_data="size_xlarge"),
+        ],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await query.edit_message_text(
+        f"✅ اللون: {color_label}\n\n📏 اختر مقاس اللوجو:",
+        reply_markup=reply_markup
+    )
+
+
+# ════════════════════════════════════════════════════════════════
+# اختيار المقاس → طلب اختيار الموضع
+# ════════════════════════════════════════════════════════════════
+async def select_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if not context.user_data.get(KEY_ITEMS):
+        await query.edit_message_text("⚠️ مفيش صور أو فيديوهات محفوظة، ابعت عنصر الأول.")
+        return
+
+    size = query.data.replace("size_", "")  # "small" / "medium" / "large" / "xlarge"
+    if size not in LOGO_SIZE_OPTIONS:
+        size = "medium"
+    context.user_data[KEY_SIZE] = size
+
+    color = context.user_data.get(KEY_COLOR, "black")
+    color_label = "⚫ أسود" if color == "black" else "⚪ أبيض"
+    size_label = SIZE_LABELS.get(size, size)
 
     keyboard = [
         [
@@ -176,7 +222,9 @@ async def select_color(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await query.edit_message_text(
-        f"✅ اللون: {color_label}\n\n📍 اختر موضع اللوجو:",
+        f"✅ اللون: {color_label}\n"
+        f"✅ المقاس: {size_label}\n\n"
+        f"📍 اختر موضع اللوجو:",
         reply_markup=reply_markup
     )
 
@@ -239,6 +287,8 @@ async def select_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     position = query.data.replace("pos_", "")  # "top_right" etc.
     color = context.user_data.get(KEY_COLOR, "black")
+    size = context.user_data.get(KEY_SIZE, "medium")
+    size_ratio = LOGO_SIZE_OPTIONS.get(size, LOGO_SIZE_OPTIONS["medium"])
     items = context.user_data.get(KEY_ITEMS, [])
 
     if not items:
@@ -247,6 +297,7 @@ async def select_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     color_label = "⚫ أسود" if color == "black" else "⚪ أبيض"
+    size_label = SIZE_LABELS.get(size, size)
     position_label = POSITION_LABELS.get(position, position)
     count = len(items)
     photos_count = sum(1 for i in items if i["type"] == "photo")
@@ -255,6 +306,7 @@ async def select_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.edit_message_text(
         f"⏳ جاري معالجة {count} عنصر ({photos_count} صورة، {videos_count} فيديو)...\n"
         f"• اللون: {color_label}\n"
+        f"• المقاس: {size_label}\n"
         f"• الموضع: {position_label}\n\n"
         f"الفيديوهات ممكن تاخد وقت أطول شوية 🎬"
     )
@@ -265,9 +317,9 @@ async def select_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for item in items:
         try:
             if item["type"] == "photo":
-                result_bytes = add_logo_to_image(item["bytes"], color, position)
+                result_bytes = add_logo_to_image(item["bytes"], color, position, size_ratio)
             else:
-                result_bytes = add_logo_to_video(item["bytes"], color, position)
+                result_bytes = add_logo_to_video(item["bytes"], color, position, size_ratio)
             results.append({"type": item["type"], "bytes": result_bytes})
         except VideoProcessingError as e:
             logger.error(f"خطأ في معالجة فيديو: {e}")
@@ -290,12 +342,14 @@ async def select_position(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_caption = (
         f"✅ *تم!* اللوجو أُضيف بنجاح{plural_note} 🎈\n"
         f"• اللون: {color_label}\n"
+        f"• المقاس: {size_label}\n"
         f"• الموضع: {position_label}\n\n"
         f"ابعت صورة أو فيديو جديد لو عايز تكمل 👇"
     )
     channel_caption = (
         f"👤 من: {user_name}\n"
         f"• اللون: {color_label}\n"
+        f"• المقاس: {size_label}\n"
         f"• الموضع: {position_label}\n"
         f"• عدد العناصر: {ok_count}"
     )
@@ -361,6 +415,7 @@ def main():
     app.add_handler(MessageHandler(filters.PHOTO, receive_photo))
     app.add_handler(MessageHandler(filters.VIDEO, receive_video))
     app.add_handler(CallbackQueryHandler(select_color, pattern="^color_"))
+    app.add_handler(CallbackQueryHandler(select_size, pattern="^size_"))
     app.add_handler(CallbackQueryHandler(select_position, pattern="^pos_"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, unexpected_message))
 
