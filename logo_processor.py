@@ -99,3 +99,4 @@ def generate_white_logo_from_black():
         else:
             print("⚠️ لم يتم العثور على logo_black.png")
 
+
