@@ -11,7 +11,7 @@ LOGO_BLACK_PATH = "logo_black.PNG"
 LOGO_WHITE_PATH = "logo_white.PNG"
 
 # حجم اللوجو (نسبة من عرض الصورة)
-LOGO_SIZE_RATIO = 0.20  # 20% من عرض الصورة
+LOGO_SIZE_RATIO = 0.26  # 26% من عرض الصورة (تم تكبيرها شوية)
 
 # هامش من الحواف (بالبكسل)
 LOGO_MARGIN = 30
