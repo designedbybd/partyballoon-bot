@@ -8,12 +8,15 @@ import os
 from config import LOGO_BLACK_PATH, LOGO_WHITE_PATH, LOGO_SIZE_RATIO, LOGO_MARGIN
 
 
-def prepare_logo(logo_path: str, target_width: int) -> Image.Image:
+def prepare_logo(logo_path: str, target_width: int, size_ratio: float = None) -> Image.Image:
     """تحضير اللوجو بالحجم المناسب"""
     logo = Image.open(logo_path).convert("RGBA")
-    
+
+    if size_ratio is None:
+        size_ratio = LOGO_SIZE_RATIO
+
     # حساب الحجم الجديد مع الحفاظ على النسب
-    logo_w = int(target_width * LOGO_SIZE_RATIO)
+    logo_w = int(target_width * size_ratio)
     ratio = logo_w / logo.width
     logo_h = int(logo.height * ratio)
     
@@ -39,7 +42,8 @@ def get_logo_position(position: str, img_w: int, img_h: int, logo_w: int, logo_h
 def add_logo_to_image(
     image_bytes: bytes,
     color: str,
-    position: str
+    position: str,
+    size_ratio: float = None
 ) -> bytes:
     """
     إضافة اللوجو على الصورة
@@ -48,6 +52,7 @@ def add_logo_to_image(
         image_bytes: بيانات الصورة
         color: "black" أو "white"
         position: "top_right" / "top_left" / "bottom_right" / "bottom_left"
+        size_ratio: نسبة حجم اللوجو من عرض الصورة (اختياري، بيستخدم القيمة الافتراضية لو مش متحدد)
     
     Returns:
         بيانات الصورة بعد إضافة اللوجو (JPEG)
@@ -60,7 +65,7 @@ def add_logo_to_image(
     logo_path = LOGO_BLACK_PATH if color == "black" else LOGO_WHITE_PATH
 
     # تحضير اللوجو
-    logo = prepare_logo(logo_path, img_w)
+    logo = prepare_logo(logo_path, img_w, size_ratio)
     logo_w, logo_h = logo.size
 
     # حساب الموضع
@@ -98,5 +103,4 @@ def generate_white_logo_from_black():
             print("✅ تم إنشاء logo_white.png تلقائيًا")
         else:
             print("⚠️ لم يتم العثور على logo_black.png")
-
 
