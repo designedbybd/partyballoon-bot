@@ -43,7 +43,8 @@ def add_logo_to_image(
     image_bytes: bytes,
     color: str,
     position: str,
-    size_ratio: float = None
+    size_ratio: float = None,
+    custom_xy_ratio: tuple = None,
 ) -> bytes:
     """
     إضافة اللوجو على الصورة
@@ -51,8 +52,9 @@ def add_logo_to_image(
     Args:
         image_bytes: بيانات الصورة
         color: "black" أو "white"
-        position: "top_right" / "top_left" / "bottom_right" / "bottom_left"
+        position: "top_right" / "top_left" / "bottom_right" / "bottom_left" (يتجاهله لو custom_xy_ratio متحدد)
         size_ratio: نسبة حجم اللوجو من عرض الصورة (اختياري، بيستخدم القيمة الافتراضية لو مش متحدد)
+        custom_xy_ratio: (x_ratio, y_ratio) موضع مخصص من المعاينة الحية (نسبة 0-1 من عرض/ارتفاع الصورة)
     
     Returns:
         بيانات الصورة بعد إضافة اللوجو (JPEG)
@@ -69,7 +71,14 @@ def add_logo_to_image(
     logo_w, logo_h = logo.size
 
     # حساب الموضع
-    x, y = get_logo_position(position, img_w, img_h, logo_w, logo_h)
+    if custom_xy_ratio is not None:
+        x_ratio, y_ratio = custom_xy_ratio
+        x = int(round(x_ratio * img_w))
+        y = int(round(y_ratio * img_h))
+        x = max(0, min(x, img_w - logo_w))
+        y = max(0, min(y, img_h - logo_h))
+    else:
+        x, y = get_logo_position(position, img_w, img_h, logo_w, logo_h)
 
     # لصق اللوجو على الصورة
     canvas = image.copy()
@@ -103,4 +112,3 @@ def generate_white_logo_from_black():
             print("✅ تم إنشاء logo_white.png تلقائيًا")
         else:
             print("⚠️ لم يتم العثور على logo_black.png")
-
