@@ -45,7 +45,13 @@ def _probe_video_size(video_path: str) -> tuple:
     return width, height
 
 
-def add_logo_to_video(video_bytes: bytes, color: str, position: str, size_ratio: float = None) -> bytes:
+def add_logo_to_video(
+    video_bytes: bytes,
+    color: str,
+    position: str,
+    size_ratio: float = None,
+    custom_xy_ratio: tuple = None,
+) -> bytes:
     """
     إضافة اللوجو على فيديو باستخدام ffmpeg
 
@@ -53,8 +59,9 @@ def add_logo_to_video(video_bytes: bytes, color: str, position: str, size_ratio:
         video_bytes: بيانات الفيديو
         color: "black" أو "white"
         position: "top_right" / "top_left" / "bottom_right" / "bottom_left"
-                  / "top_center" / "bottom_center"
+                  / "top_center" / "bottom_center" (يتجاهله لو custom_xy_ratio متحدد)
         size_ratio: نسبة حجم اللوجو من عرض الفيديو (اختياري)
+        custom_xy_ratio: (x_ratio, y_ratio) موضع مخصص من المعاينة الحية (نسبة 0-1)
 
     Returns:
         بيانات الفيديو بعد إضافة اللوجو (MP4)
@@ -82,7 +89,14 @@ def add_logo_to_video(video_bytes: bytes, color: str, position: str, size_ratio:
         logo_w, logo_h = logo_img.size
 
         # حساب موضع اللوجو (نفس منطق الصور بالظبط)
-        x, y = get_logo_position(position, video_w, video_h, logo_w, logo_h)
+        if custom_xy_ratio is not None:
+            x_ratio, y_ratio = custom_xy_ratio
+            x = int(round(x_ratio * video_w))
+            y = int(round(y_ratio * video_h))
+            x = max(0, min(x, video_w - logo_w))
+            y = max(0, min(y, video_h - logo_h))
+        else:
+            x, y = get_logo_position(position, video_w, video_h, logo_w, logo_h)
 
         cmd = [
             "ffmpeg", "-y",
