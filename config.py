@@ -31,4 +31,3 @@ CHANNEL_ID = "-1004368547666"
 # وتحط الرابط هنا أو في متغير بيئة/سيكريت اسمه MINI_APP_URL
 # مثال: https://designedbybd.github.io/partyballoon-bot/
 MINI_APP_URL = os.getenv("MINI_APP_URL", "")
-
